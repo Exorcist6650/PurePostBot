@@ -28,16 +28,16 @@ namespace PurePostBot
                 case LogStatus.Warning:
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine($"{text} | {DateTime.UtcNow}");
-                    Console.ResetColor();
                     break;
 
                 // Error red color
                 case LogStatus.Error:
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"{text} | {DateTime.UtcNow}");
-                    Console.ResetColor();
                     break;
             }
+
+            Console.ResetColor(); // Reset console color
         }
     }
 }

@@ -9,10 +9,10 @@ using Telegram.Bot.Types;
 
 namespace PurePostBot
 {
-    internal class Host
+    class Host
     {
         // Events
-        public Action<ITelegramBotClient, Update?> OnMessage;
+        public Action<ITelegramBotClient, Update>? OnMessage;
 
         // Fields
         public User Me { get; private set; } // Bot info
@@ -37,13 +37,9 @@ namespace PurePostBot
         // Handlers
         private async Task updateHandler(ITelegramBotClient client, Update update, CancellationToken token)
         {
-            // Validation and initialization
-            if (update.Message is not { } message) return; // Message
-            if (message.Chat?.Id is not { } chatId) return; // ChatId
-
             OnMessage?.Invoke(client, update); // Event calling
 
-            ConsoleLogger.Log(message?.Text ?? "Nothing"); // Log
+            ConsoleLogger.Log(update?.Message?.Text ?? "Nothing"); // Log
             await Task.CompletedTask;
         }
 

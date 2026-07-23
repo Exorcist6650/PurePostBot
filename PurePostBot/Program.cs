@@ -3,7 +3,7 @@ using PurePostBot;
 
 namespace MyApp
 {
-    internal class Program
+    class Program
     {
         static async Task Main(string[] args)
         {
@@ -11,9 +11,8 @@ namespace MyApp
             
             if (token != null)
             {
-                var host = new Host(token);
-                await host.Start();
-                Console.WriteLine(host.Me);
+                var bot = new TgBot(new Host(token));
+                await bot.Init();
             }
 
             Console.Read();
