@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Utils;
 
-namespace PurePostBot
+namespace TgBot
 {
     class Host
     {
@@ -17,7 +18,7 @@ namespace PurePostBot
         // Fields
         public User Me { get; private set; } // Bot info
 
-        private readonly TelegramBotClient _telegramBot; // Instance
+        public TelegramBotClient _telegramBot { get; private set; } // Instance
 
 
         // Constructor

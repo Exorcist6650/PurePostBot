@@ -1,5 +1,4 @@
-﻿using System;
-using PurePostBot;
+﻿using TgBot;
 
 namespace MyApp
 {
@@ -8,14 +7,16 @@ namespace MyApp
         static async Task Main(string[] args)
         {
             var token = Environment.GetEnvironmentVariable("BOT_TOKEN", EnvironmentVariableTarget.User);
-            
+
             if (token != null)
             {
-                var bot = new TgBot(new Host(token));
+                var bot = new Bot(new Host(token));
                 await bot.Init();
-            }
 
-            Console.Read();
+                Console.Read();
+            }
+            else
+                Console.WriteLine("Token is null");
         }
     }
 }
