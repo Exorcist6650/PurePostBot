@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Utils;
 using Services;
+using Handlers;
+using PurePostBot;
 
 namespace TgBot
 {
@@ -27,6 +24,8 @@ namespace TgBot
     {
         // Dependencies
         private Host _host;
+        private StartHandler _startHandler;
+        private HelpHandler _helpHandler;
 
 
         // Fields
@@ -35,6 +34,8 @@ namespace TgBot
         public Bot(Host host)
         {
             _host = host;
+            _startHandler = new StartHandler(_host._telegramBot);
+            _helpHandler = new HelpHandler(_host._telegramBot);
         }
 
         public async Task Init()
@@ -51,6 +52,18 @@ namespace TgBot
             // Validation and initialization
             if (update?.Message is not { } message) return; // Message
             if (message.Chat?.Id is not { } chatId) return; // ChatId
+
+
+            if (message.Text.StartsWith("/start"))
+            {
+                await _startHandler.HandleAsync(message);
+                return;
+            }
+            else if (message.Text.StartsWith("/help"))
+            {
+                await _helpHandler.HandleAsync(message);
+                return;
+            }
 
             // Delete user message
             await SafeMode(() => client.DeleteMessage(chatId, message.Id));

@@ -1,0 +1,15 @@
+{
+    "en": {
+        "start_text": "Hello! I'm a post bot. I can post your messages to your channel. Click /help for more information and setup guide.",
+
+        "help_text": "If you wanna use me, invite me to your channel or group with admin rights. After that click /options and follow guide to set your channel.",
+
+        "set_group": "1. Invite me to your channel or group with admin rights.\n2. Forward a message from your channel or group to this chat.",
+
+        "set_group_success": "Success! Now you can post messages to your group!",
+
+        "set_group_failed": "It's seems not be a channel or group message. Please, send me a forward message from your channel or group again.",
+
+        "remove_group": "Group has been removed."
+    }
+}
