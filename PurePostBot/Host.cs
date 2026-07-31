@@ -41,7 +41,7 @@ namespace TgBot
 
         private async Task ErrorHandler(ITelegramBotClient client, Exception exception, HandleErrorSource source, CancellationToken token)
         {
-            ConsoleLogger.Log(exception.Message, LogStatus.Error); // Log
+            ConsoleLogger.Log(exception.Message, ELogStatus.Error); // Log
             await Task.CompletedTask;
         }
 

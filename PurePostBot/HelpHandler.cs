@@ -19,7 +19,7 @@ namespace PurePostBot
             var text = RepliesReadService.GetReply("help_text");
 
             // Sending
-            await PostingService.Send(_bot, chatId, new Message() { Text = text }, EMessageType.Message);
+            await PostingService.Send(_bot, chatId, new Message() { Text = text });
         }
     }
 }

@@ -10,7 +10,7 @@ namespace MyApp
 
             if (token != null)
             {
-                var bot = new Bot(new Host(token));
+                var bot = new Bot(new Host(token), new Services.MediaGroupService());
                 await bot.Init();
 
                 Console.Read();

@@ -1,6 +1,6 @@
 ﻿namespace Utils
 {
-    public enum LogStatus : byte
+    public enum ELogStatus : byte
     {
         Message,
         Warning,
@@ -9,23 +9,23 @@
 
     static class ConsoleLogger
     {
-        public static void Log(string text, LogStatus status = LogStatus.Message)
+        public static void Log(string text, ELogStatus status = ELogStatus.Message)
         {
             switch (status)
             {
                 // Message standard
-                case LogStatus.Message:
+                case ELogStatus.Message:
                     Console.WriteLine($"{text} | {DateTime.UtcNow}");
                     break;
 
                 // Warning yellow color
-                case LogStatus.Warning:
+                case ELogStatus.Warning:
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine($"{text} | {DateTime.UtcNow}");
                     break;
 
                 // Error red color
-                case LogStatus.Error:
+                case ELogStatus.Error:
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"{text} | {DateTime.UtcNow}");
                     break;

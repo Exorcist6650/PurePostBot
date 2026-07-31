@@ -19,7 +19,7 @@ namespace Handlers
             var text = RepliesReadService.GetReply("start_text");
 
             // Sending
-            await PostingService.Send(_bot, chatId, new Message() { Text = text }, EMessageType.Message);
+            await PostingService.Send(_bot, chatId, new Message() { Text = text });
         }
     }
 }

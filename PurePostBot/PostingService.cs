@@ -1,22 +1,33 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
-using TgBot;
 using Utils;
 
 namespace Services
 {
+    public enum EMessageType : byte
+    {
+        Animation,
+        Audio,
+        Document,
+        Message,
+        Photo,
+        Sticker,
+        Video,
+        Voice,
+    }
+
     static class PostingService
     {
         // Post message to the chat
-        public static async Task<Message?> Send(ITelegramBotClient client, ChatId chatId, Message message, EMessageType? type)
+        public static async Task<Message?> Send(ITelegramBotClient client, ChatId chatId, Message message)
         {
             try
             {
-                return await SendMessage(client, chatId, message, type);
+                return await SendMessage(client, chatId, message, GetMessageType(message));
             }
             catch (Exception ex)
             {
-                ConsoleLogger.Log(ex.Message, LogStatus.Error); // Log
+                ConsoleLogger.Log(ex.Message, ELogStatus.Error); // Log
             }
             return null;
         }
@@ -30,8 +41,35 @@ namespace Services
             }
             catch (Exception ex)
             {
-                ConsoleLogger.Log(ex.Message, LogStatus.Error); // Log
+                ConsoleLogger.Log(ex.Message, ELogStatus.Error); // Log
             }
+        }
+
+        // Delete message 
+        public static async Task Remove(ITelegramBotClient client, ChatId chatId, Message message)
+        {
+            try
+            {
+                await client.DeleteMessage(chatId, message.Id);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLogger.Log(ex.Message, ELogStatus.Error); // Log
+            }
+        }
+
+        // Message type
+        public static EMessageType? GetMessageType(Message message)
+        {
+            if (message.Text != null) return EMessageType.Message;
+            else if (message.Photo != null && message.Photo.Length > 0) return EMessageType.Photo;
+            else if (message.Video != null) return EMessageType.Video;
+            else if (message.Animation != null) return EMessageType.Animation;
+            else if (message.Audio != null) return EMessageType.Audio;
+            else if (message.Voice != null) return EMessageType.Voice;
+            else if (message.Document != null) return EMessageType.Document;
+            else if (message.Sticker != null) return EMessageType.Sticker;
+            else return null;
         }
 
         // Send message
@@ -79,6 +117,5 @@ namespace Services
                 await client.SendMediaGroup(chatId, mediaGroup);
             }
         }
-
     }
 }
