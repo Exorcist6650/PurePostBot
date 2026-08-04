@@ -1,4 +1,8 @@
-﻿using TgBot;
+﻿using Services;
+using SqlDB;
+using DataManagement;
+using TgBot;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MyApp
 {
@@ -10,8 +14,27 @@ namespace MyApp
 
             if (token != null)
             {
-                var bot = new Bot(new Host(token), new Services.MediaGroupService());
+                // Db instance
+                SQLitePCL.Batteries.Init();
+                var db = new SqlDb(new DbOptions
+                    { ConnectionString = $"Data Source = botdata.db" }
+                );
+                await db.InitAsync();
+
+                // Bot instance
+                var bot = new Bot(
+                    new Host(token), 
+                    new UserService(
+                        new UserRepository(db), 
+                        new UserRepositoryCache(
+                            new UserRepository(db), 
+                            new MemoryCache(new MemoryCacheOptions()), TimeSpan.FromMinutes(8)
+                        )
+                    ),
+                    new MediaGroupService()
+                );
                 await bot.Init();
+
 
                 Console.Read();
             }

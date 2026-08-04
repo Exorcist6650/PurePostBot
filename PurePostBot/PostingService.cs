@@ -81,28 +81,37 @@ namespace Services
             switch (type)
             {
                 case EMessageType.Animation:
-                    return await client.SendAnimation(chatId, message.Animation, caption: message.Caption);
+                    return await client.SendAnimation(chatId, message.Animation!, 
+                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
 
                 case EMessageType.Audio:
-                    return await client.SendAudio(chatId, message.Audio, caption: message.Caption);
+                    return await client.SendAudio(chatId, message.Audio!, 
+                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
 
                 case EMessageType.Document:
-                    return await client.SendDocument(chatId, message.Document, caption: message.Caption);
+                    return await client.SendDocument(chatId, message.Document!, 
+                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
 
                 case EMessageType.Message:
-                    return await client.SendMessage(chatId, message.Text);
+                    return await client.SendMessage(chatId, message.Text!, 
+                        replyMarkup: message.ReplyMarkup);
 
                 case EMessageType.Photo:
-                    return await client.SendPhoto(chatId, message.Photo[^1], caption: message.Caption);
+                    return await client.SendPhoto(chatId, message.Photo![^1], 
+                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
 
                 case EMessageType.Sticker:
-                    return await client.SendSticker(chatId, message.Sticker);
+                    return await client.SendSticker(chatId, message.Sticker!, 
+                        replyMarkup: message.ReplyMarkup);
 
                 case EMessageType.Video:
-                    return await client.SendVideo(chatId, message.Video, caption: message.Caption);
+                    return await client.SendVideo(chatId, message.Video!, 
+                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
 
                 case EMessageType.Voice:
-                    return await client.SendVoice(chatId, message.Voice, caption: message.Caption);
+                    return await client.SendVoice(chatId, message.Voice!, 
+                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
+
                 default:
                     return null;
             }

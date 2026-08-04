@@ -1,6 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Utils;
 
 namespace TgBot
@@ -9,6 +10,7 @@ namespace TgBot
     {
         // Events
         public Action<ITelegramBotClient, Update>? OnMessage;
+        public Action<ITelegramBotClient, CallbackQuery>? OnCallback;
 
         // Fields
         public User Me { get; private set; } // Bot info
@@ -33,9 +35,24 @@ namespace TgBot
         // Handlers
         private async Task updateHandler(ITelegramBotClient client, Update update, CancellationToken token)
         {
-            OnMessage?.Invoke(client, update); // Event calling
+            // Button callback
+            if (update.Type == UpdateType.CallbackQuery)
+            {
+                if (update.CallbackQuery is { } callback)
+                {
+                    OnCallback?.Invoke(client, callback); // Event calling
 
-            ConsoleLogger.Log(update?.Message?.Text ?? "Nothing"); // Log
+                    ConsoleLogger.Log($"Button {callback.Data}"); // Log
+                }
+            }
+            // Message
+            else 
+            {
+                OnMessage?.Invoke(client, update); // Event calling
+
+                ConsoleLogger.Log(update?.Message?.Text ?? "Nothing"); // Log
+            }
+
             await Task.CompletedTask;
         }
 

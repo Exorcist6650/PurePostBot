@@ -2,17 +2,20 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace PurePostBot
+namespace Handlers
 {
     public class MessageHandler
     {
         private readonly ITelegramBotClient _bot;
         private readonly MediaGroupService _mediaGroupService;
+        private readonly UserService _userService;
+        private readonly OptionsService _optionsService;
 
-        public MessageHandler(ITelegramBotClient bot, MediaGroupService mediaGroupService)
+        public MessageHandler(ITelegramBotClient bot, MediaGroupService mediaGroupService, UserService userService)
         {
             _bot = bot;
             _mediaGroupService = mediaGroupService;
+            _userService = userService;
         }
 
         public async Task HandleAsync(Message message)

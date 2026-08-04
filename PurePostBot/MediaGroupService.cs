@@ -31,19 +31,19 @@ namespace Services
                         switch (type)
                         {
                             case EMessageType.Photo:
-                                mediaGroup.Add(new InputMediaPhoto(message.Photo[^1]) { Caption = message.Caption });
+                                mediaGroup.Add(new InputMediaPhoto(message.Photo![^1]) { Caption = message.Caption });
                                 break;
 
                             case EMessageType.Video:
-                                mediaGroup.Add(new InputMediaVideo(message.Video) { Caption = message.Caption });
+                                mediaGroup.Add(new InputMediaVideo(message.Video!) { Caption = message.Caption });
                                 break;
 
                             case EMessageType.Document:
-                                mediaGroup.Add(new InputMediaDocument(message.Document) { Caption = message.Caption });
+                                mediaGroup.Add(new InputMediaDocument(message.Document!) { Caption = message.Caption });
                                 break;
 
                             case EMessageType.Audio:
-                                mediaGroup.Add(new InputMediaAudio(message.Audio) { Caption = message.Caption });
+                                mediaGroup.Add(new InputMediaAudio(message.Audio!) { Caption = message.Caption });
                                 break;
 
                             default:

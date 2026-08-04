@@ -3,7 +3,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using TgBot;
 
-namespace PurePostBot
+namespace Handlers
 {
     public class HelpHandler
     {

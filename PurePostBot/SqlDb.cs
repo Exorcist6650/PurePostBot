@@ -1,5 +1,5 @@
 ﻿using System.Data;
-using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
 
 namespace SqlDB
 {
@@ -16,15 +16,34 @@ namespace SqlDB
             _connectionString = options.ConnectionString;
         }
 
-        // Execute INSERT/UPDATE/DELETE
-        public async Task<int> ExecuteAsync(string sqlQuery, params SqlParameter[] parameters)
+        // Db initializer
+        public async Task<int> InitAsync()
         {
             // Set and open db connection
-            await using var connection = new SqlConnection(_connectionString);
+            await using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // Table create query
+            string query = @"
+                CREATE TABLE IF NOT EXISTS Users(
+                    Id BIGINT NOT NULL PRIMARY KEY, 
+                    GroupId BIGINT NULL,
+                    IsChangingGroupId BOOLEAN NOT NULL
+                );";
+
+            await using var command = new SqliteCommand(query, connection);
+            return await command.ExecuteNonQueryAsync();
+        }
+
+        // Execute INSERT/UPDATE/DELETE
+        public async Task<int> ExecuteAsync(string sqlQuery, params SqliteParameter[] parameters)
+        {
+            // Set and open db connection
+            await using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
             // Sql cmd
-            await using var command = new SqlCommand(sqlQuery, connection); 
+            await using var command = new SqliteCommand(sqlQuery, connection); 
             if (parameters?.Length > 0) command.Parameters.AddRange(parameters);
 
             return await command.ExecuteNonQueryAsync(); // Return operations amount
@@ -32,14 +51,14 @@ namespace SqlDB
 
         // Execute SELECT one row
         public async Task<T?> QuerySingleAsync<T>(string sqlQuery, Func<IDataRecord, T> map, 
-            params SqlParameter[] parameters)
+            params SqliteParameter[] parameters)
         {
             // Set and open db connection
-            await using var connection = new SqlConnection(_connectionString);
+            await using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
             // Sql cmd
-            await using var command = new SqlCommand(sqlQuery, connection);
+            await using var command = new SqliteCommand(sqlQuery, connection);
             if (parameters?.Length > 0) command.Parameters.AddRange(parameters);
 
             // Read single row
@@ -51,14 +70,14 @@ namespace SqlDB
 
         // Execute SELECT list
         public async Task<List<T>> QueryAsync<T>(string sqlQuery, Func<IDataRecord, T> map,
-            params SqlParameter[] parameters)
+            params SqliteParameter[] parameters)
         {
             // Set and open db connection
-            await using var connection = new SqlConnection(_connectionString);
+            await using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
             // Sql cmd
-            await using var command = new SqlCommand(sqlQuery, connection);
+            await using var command = new SqliteCommand(sqlQuery, connection);
             if (parameters?.Length > 0) command.Parameters.AddRange(parameters);
 
             var result = new List<T>();
