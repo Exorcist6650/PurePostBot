@@ -3,10 +3,11 @@ using SqlDB;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using TgBot;
+using Utils;
 
 namespace Handlers
 {
-    public class StartHandler
+    public class StartHandler : IMessageHandler
     {
         private readonly ITelegramBotClient _bot;
         private readonly UserService _userService;
@@ -29,7 +30,6 @@ namespace Handlers
 
             // Adding user to db
             await _userService.RegisterUserAsync(chatId, null, false);
-            Console.WriteLine("all is good");
         }
     }
 }

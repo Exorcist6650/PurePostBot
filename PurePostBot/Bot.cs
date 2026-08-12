@@ -3,34 +3,38 @@ using Telegram.Bot.Types;
 using Utils;
 using Services;
 using Handlers;
+using System.Reflection.Emit;
+using DataManagement;
 
 namespace TgBot
 {
-    class Bot
+    class Bot(TgHost host,
+        UserService userService,
+        MediaGroupService mediaGroupService,
+        OptionsService optionsService,
+        GroupIdService groupIdService,
+        PostingMessagesCache postingMessagesCache,
+        PostEditService postEditService,
+
+        StartHandler startHandler,
+        HelpHandler helpHandler,
+        OptionsHandler optionsHandler,
+        DefaultHandler defaultHandler)
     {
         // Dependencies
-        private readonly Host _host;
-        private readonly StartHandler _startHandler;
-        private readonly HelpHandler _helpHandler;
-        private readonly OptionsHandler _optionsHandler;
-        private readonly MessageHandler _messageHandler;
-        private readonly UserService _userService;
-        private readonly OptionsService _optionsService;
-        private readonly GroupIdService _groupIdService;
+        private readonly TgHost _host = host;
+        private readonly StartHandler _startHandler = startHandler;
+        private readonly HelpHandler _helpHandler = helpHandler;
+        private readonly OptionsHandler _optionsHandler = optionsHandler;
+        private readonly DefaultHandler _defaultHandler = defaultHandler;
+        private readonly UserService _userService = userService;
+        private readonly MediaGroupService _mediaGroupService = mediaGroupService;
+        private readonly OptionsService _optionsService = optionsService;
+        private readonly GroupIdService _groupIdService = groupIdService;
+        private readonly PostingMessagesCache _postingMessagesCache = postingMessagesCache;
+        private readonly PostEditService _postEditService = postEditService;
 
-        public Bot(Host host, UserService userService, MediaGroupService mediaGroupService)
-        {
-            _host = host;
-            _startHandler = new StartHandler(_host._telegramBot, userService);
-            _helpHandler = new HelpHandler(_host._telegramBot);
-            _optionsHandler = new OptionsHandler(_host._telegramBot, userService);
-            _messageHandler = new MessageHandler(_host._telegramBot, mediaGroupService, userService);
-            _userService = userService;
-            _optionsService = new OptionsService(_host._telegramBot, userService);
-            _groupIdService = new GroupIdService(_host._telegramBot, userService, _optionsService);
-        }
-
-        public async Task Init()
+        public async Task InitAsync()
         {
             await _host.Start(); // Bot starting
 
@@ -47,36 +51,94 @@ namespace TgBot
             if (update?.Message is not { } message) return; // Message
             if (message.Chat?.Id is not { } chatId) return; // ChatId
 
-            // Checking, execute commands and return if message is a command
-            if (await DispatchCommandAsync(message)) return;
+            // Case message is a part of album
+            if (message.MediaGroupId is not null)
+            {
+                // Collect all messages to buffer
+                _mediaGroupService.AppendToBuffer(message.MediaGroupId, message);
 
-            // Checking status, set groupid and return if status is true
-            if (!await _groupIdService.HandleChangingGroupIdAsync(message, chatId)) return;
-            
+                // Waiting all messages from album
+                await Task.Delay(1000);
 
-            // Otherwise handle message
-            await _messageHandler.HandleAsync(message);
+                // Get first
+                _mediaGroupService.GetMessages(message.MediaGroupId)!.TryPeek(out var firstMessage);
+
+                // Handle only for first message
+                if (ReferenceEquals(firstMessage, message))
+                {
+                    await HandleFlowAsync(message, _defaultHandler.HandleAlbumAsync);
+                    _mediaGroupService.TryRemoveFromBuffer(message.MediaGroupId); // Remove group
+                }
+            }
+            else
+                // Default case
+                await HandleFlowAsync(message, _defaultHandler.HandleAsync);
         }
 
         private async void OnCallback(ITelegramBotClient client, CallbackQuery query)
         {
+            if (query.Message is not { } message) return;
+
+            // Update button UI
+            try
+            {
+                await client.AnswerCallbackQuery(query.Id);
+            }
+            catch(Exception ex)
+            {
+                ConsoleLogger.Log(ex.Message, ELogStatus.Warning);
+            }
+
+            // Handle buttons
             switch (query.Data)
             {
                 case "action:cancel":
-                    await PostingService.Remove(client, query.Message.Chat.Id, query.Message);
+                    await PostingService.Remove(client, message.Chat.Id, message);
                     break;
 
-                case "action:change_group":
-                    await _optionsService.StartChangeGroupProcess(query);
+                // Options message block
+                case "action:options_change_group":
+                    await _optionsService.StartChangeGroupIdProcessAsync(query);
                     break;
 
-                default:
+                case "action:options_remove_group":
+                    await _optionsService.RemoveGroupIdProcessAsync(query);
+                    break;
+
+                case "action:options_cancel":
+                    await _optionsService.InterruptChangeGroupIdAsync(query);
+                    break;
+
+                // Editing message block
+                case "action:editing_send_post":
+                    await _postEditService.SendToGroup(query);
+                    break;
+
+                case "action:editing_cancel":
+                    _postEditService.CancelEditing(query);
                     break;
             }
         }
 
 
         // Methods
+        public async Task HandleFlowAsync(Message message, Func<Message, Task> defaultHandler)
+        {
+            if (message.Chat?.Id is not { } chatId) return; // ChatId
+
+            // Register a user if not
+            await _userService.RegisterUserAsync(chatId, null, false);
+
+            // Checking, execute commands and return if message is a command
+            if (await DispatchCommandAsync(message)) return;
+
+            // Checking status for set group id
+            if (await _groupIdService.HandleChangingGroupIdAsync(message, chatId)) return;
+
+            // Otherwise handle message
+            await defaultHandler(message);
+        }
+
         public async Task<bool> DispatchCommandAsync(Message message)
         {
             if (message.Text is not string text) return false;
@@ -102,7 +164,7 @@ namespace TgBot
             // Try get group
             if (await GetGroupId(message) is { } groupId)
             {
-                await _optionsService.ChangeUserGroupAsync(userId, groupId); // Change user data 
+                await _optionsService.ChangeUserGroupIdAsync(userId, groupId); // Change user data 
                 return true;
             }
 
@@ -121,7 +183,7 @@ namespace TgBot
                     try
                     {
                         // Get member
-                        var member = await _host._telegramBot.GetChatMember(message.ForwardFromChat, _host.Me.Id);
+                        var member = await _host.TelegramBot.GetChatMember(message.ForwardFromChat, _host.Me.Id);
 
                         if (member != null && member.IsAdmin)
                         {

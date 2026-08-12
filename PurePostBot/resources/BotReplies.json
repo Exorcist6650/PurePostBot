@@ -10,6 +10,14 @@
 
         "set_group_failed": "It's seems you're not invite me to this group | channel or it's not a message from it. Please, try again.",
 
-        "remove_group": "Group has been removed."
+        "remove_group": "Group has been removed.",
+
+        "group_id_null": "You doesn't set a group | channel. Click /options and follow guide to set your group | channel.",
+
+        "ticket_unavailable": "This ticket is unavailable cause timeout. Send your post again.",
+
+        "not_admin_rights": "I'm not have rights to post in that group | channel. Invite me to this group | channel before.",
+
+        "success_sending_group": "Success! Post was sent."
     }
 }

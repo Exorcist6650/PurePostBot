@@ -18,6 +18,11 @@ namespace Services
             _optionsService = optionsService;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="userId"></param>
+        /// <returns>True if user is changing group id, false otherwise</returns>
         public async Task<bool> HandleChangingGroupIdAsync(Message message, long userId)
         {
             if ((await _userService.GetUserAsync(userId)).IsChangingGroupId)
@@ -28,17 +33,17 @@ namespace Services
                     // Send success message
                     await PostingService.Send(_bot, userId, new Message
                     { Text = RepliesReadService.GetReply("set_group_success") });
-                    return true;
                 }
                 else
                 {
                     // Send faliled message
                     await PostingService.Send(_bot, userId, new Message
-                        { Text = RepliesReadService.GetReply("set_group_failed") });
-                    return false;
+                    { Text = RepliesReadService.GetReply("set_group_failed") });
                 }
+
+                return true;
             }
-            else throw new SqlNullValueException("User is not register");
+            return false;
         }
 
         public async Task<bool> TrySetGroupId(Message message, long userId)
@@ -46,11 +51,29 @@ namespace Services
             // Try get group
             if (await GetGroupId(message) is { } groupId)
             {
-                await _optionsService.ChangeUserGroupAsync(userId, groupId); // Change user data 
+                await _optionsService.ChangeUserGroupIdAsync(userId, groupId); // Change user data 
                 return true;
             }
 
             return false; // Bot is not invited and message is not from group | channel
+        }
+
+        public static async Task<bool> IsGroupMember(ITelegramBotClient bot, long groupId)
+        {
+            try
+            {
+                // Get member
+                var member = await bot.GetChatMember(groupId, (await bot.GetMe()).Id);
+
+                if (member != null && member.IsAdmin)
+                    return true; // Is member
+            }
+            catch (Exception ex)
+            {
+                ConsoleLogger.Log(ex.Message, ELogStatus.Error); // Log
+            }
+
+            return false; // Is not
         }
 
         private async Task<long?> GetGroupId(Message message)

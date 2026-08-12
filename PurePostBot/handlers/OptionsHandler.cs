@@ -3,10 +3,11 @@ using SqlDB;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Services;
+using Utils;
 
 namespace Handlers
 {
-    public class OptionsHandler
+    public class OptionsHandler : IMessageHandler
     {
         private readonly ITelegramBotClient _bot;
         private readonly UserService _userService;
@@ -25,17 +26,17 @@ namespace Handlers
                 {
                     // CHANGE GROUP button 
                     InlineKeyboardButton.WithCallbackData(
-                        RepliesReadService.GetButton("options_change_group"), "action:change_group"),
+                        RepliesReadService.GetButton("options_change_group"), "action:options_change_group"),
 
                     // REMOVE GROUP button 
                     InlineKeyboardButton.WithCallbackData(
-                        RepliesReadService.GetButton("options_remove_group"), "action:remove_group"),
+                        RepliesReadService.GetButton("options_remove_group"), "action:options_remove_group"),
                 },
                 new[]
                 {
                     // CANCEL button
                     InlineKeyboardButton.WithCallbackData(
-                        RepliesReadService.GetButton("cancel"), "action:cancel")
+                        RepliesReadService.GetButton("cancel"), "action:options_cancel")
                 }
             });
             _userService = userService;

@@ -6,7 +6,7 @@ using Utils;
 
 namespace TgBot
 {
-    class Host
+    class TgHost
     {
         // Events
         public Action<ITelegramBotClient, Update>? OnMessage;
@@ -15,19 +15,19 @@ namespace TgBot
         // Fields
         public User Me { get; private set; } // Bot info
 
-        public TelegramBotClient _telegramBot { get; private set; } // Instance
+        public TelegramBotClient TelegramBot { get; } // Instance
 
 
         // Constructor
-        public Host(string token)
+        public TgHost(string token)
         {
-            _telegramBot = new TelegramBotClient(token);
+            TelegramBot = new TelegramBotClient(token);
         }
 
         public async Task Start()
         {
-            Me = await _telegramBot.GetMe(); // Get bot info
-            _telegramBot.StartReceiving(updateHandler, ErrorHandler); // Start
+            Me = await TelegramBot.GetMe(); // Get bot info
+            TelegramBot.StartReceiving(updateHandler, ErrorHandler); // Start
 
             ConsoleLogger.Log("Start receiving"); // Log
         }

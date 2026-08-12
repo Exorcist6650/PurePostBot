@@ -1,0 +1,42 @@
+﻿using Services;
+using Telegram.Bot;
+using Telegram.Bot.Types;
+using Utils;
+
+namespace Handlers
+{
+    public class DefaultHandler : IMessageHandler
+    {
+        private readonly ITelegramBotClient _bot;
+        private readonly MediaGroupService _mediaGroupService;
+        private readonly PostEditService _postEditService;
+
+        public DefaultHandler(ITelegramBotClient bot, 
+            MediaGroupService mediaGroupService, 
+            PostEditService postEditService)
+        {
+            _bot = bot;
+            _mediaGroupService = mediaGroupService;
+            _postEditService = postEditService;
+        }
+
+        public async Task HandleAsync(Message message)
+        {
+            if (message?.Chat.Id is not { } chatId) return;
+
+            await _postEditService.CreateEditMessage(message); // Create edit message
+
+        }
+
+        public async Task HandleAlbumAsync(Message message)
+        {
+            if (message?.Chat.Id is not { } chatId) return;
+            if (message.MediaGroupId is not { } mediaGroupId) return;
+
+            // Get all messages
+            if (_mediaGroupService.GetMessages(mediaGroupId) is not { } messages) return;
+
+            await _postEditService.CreateEditMessage(messages); // Create edit message
+        }
+    }
+}

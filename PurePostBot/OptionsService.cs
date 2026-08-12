@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using System.Runtime.CompilerServices;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace Services
@@ -14,25 +15,53 @@ namespace Services
             _userService = userService;
         }
 
-        public async Task StartChangeGroupProcess(CallbackQuery query)
+        public async Task StartChangeGroupIdProcessAsync(CallbackQuery query)
         {
-            if (query?.Message?.Chat.Id is not { } chatId) return;
+            if (query?.Message?.Chat.Id is not { } userId) return;
 
             // Read data
-            var user = await _userService.GetUserAsync(chatId);
+            var user = await _userService.GetUserAsync(userId);
 
             // Set status
-            await _userService.UpdateAsync(user.Id, user.GroupId, true);
+            await _userService.UpdateAsync(userId, user.GroupId, true);
 
             // Send message
-            await PostingService.Send(_bot, chatId, new Message 
+            await PostingService.Send(_bot, userId, new Message 
                 { Text = RepliesReadService.GetReply("set_group") });
         }
 
-        public async Task ChangeUserGroupAsync(long userId, long? groupId)
+        public async Task RemoveGroupIdProcessAsync(CallbackQuery query)
         {
-            // Update data
-            await _userService.UpdateAsync(userId, groupId, false);
+            if (query?.Message?.Chat.Id is not { } userId) return;
+
+            // Clear group id
+            await _userService.UpdateAsync(userId, null, false);
+
+            // Send message
+            await PostingService.Send(_bot, userId, new Message
+                { Text = RepliesReadService.GetReply("remove_group") });
         }
+
+        public async Task InterruptChangeGroupIdAsync(CallbackQuery query)
+        {
+            if (query?.Message?.Chat.Id is not { } userId) return;
+
+            // Read data
+            var user = await _userService.GetUserAsync(userId);
+
+            // Set default status
+            await _userService.UpdateAsync(userId, user.GroupId, false);
+
+            // Delete options message
+            await PostingService.Remove(_bot, userId, query.Message);
+        }
+
+        public async Task ChangeUserGroupIdAsync(long userId, long? groupId) =>
+            // Update data and remove status
+            await _userService.UpdateAsync(userId, groupId, false);
+
+        public async Task RemoveUserGroupIdAsync(long userId) =>
+            // Update data
+            await _userService.UpdateAsync(userId, null, false);
     }
 }

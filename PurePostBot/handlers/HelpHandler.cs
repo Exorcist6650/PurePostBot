@@ -2,10 +2,11 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using TgBot;
+using Utils;
 
 namespace Handlers
 {
-    public class HelpHandler
+    public class HelpHandler : IMessageHandler
     {
         private readonly ITelegramBotClient _bot;
 

@@ -4,6 +4,8 @@
 
         "options_remove_group": "Remove group | channel",
 
+        "editing_create_post":  "Send",
+
         "cancel": "Cancel"
     }
 }
