@@ -47,6 +47,21 @@ namespace Services
             }
         }
 
+        // Post menu buttons
+        public static async Task<Message?> SendTextWithMenu(
+            ITelegramBotClient client, ChatId chatId, string text, ReplyKeyboardMarkup keyboardMarkup)
+        {
+            try
+            {
+                return await client.SendMessage(chatId, text, replyMarkup: keyboardMarkup);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLogger.Log(ex.Message); // Log
+            }
+            return null;
+        }
+
         // Delete message 
         public static async Task Remove(ITelegramBotClient client, ChatId chatId, Message message)
         {

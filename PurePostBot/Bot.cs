@@ -13,6 +13,7 @@ namespace TgBot
         MediaGroupService mediaGroupService,
         OptionsService optionsService,
         GroupIdService groupIdService,
+        CaptionService captionService,
         PostingMessagesCache postingMessagesCache,
         PostEditService postEditService,
 
@@ -31,6 +32,7 @@ namespace TgBot
         private readonly MediaGroupService _mediaGroupService = mediaGroupService;
         private readonly OptionsService _optionsService = optionsService;
         private readonly GroupIdService _groupIdService = groupIdService;
+        private readonly CaptionService _captionService = captionService;
         private readonly PostingMessagesCache _postingMessagesCache = postingMessagesCache;
         private readonly PostEditService _postEditService = postEditService;
 
@@ -66,13 +68,14 @@ namespace TgBot
                 // Handle only for first message
                 if (ReferenceEquals(firstMessage, message))
                 {
-                    await HandleFlowAsync(message, _defaultHandler.HandleAlbumAsync);
+                    await HandleFlowAsync(message, _defaultHandler.HandleAlbumAsync); // Handle
+
                     _mediaGroupService.TryRemoveFromBuffer(message.MediaGroupId); // Remove group
                 }
             }
             else
                 // Default case
-                await HandleFlowAsync(message, _defaultHandler.HandleAsync);
+                await HandleFlowAsync(message, _defaultHandler.HandleAsync); // Handle
         }
 
         private async void OnCallback(ITelegramBotClient client, CallbackQuery query)
@@ -105,8 +108,12 @@ namespace TgBot
                     await _optionsService.RemoveGroupIdProcessAsync(query);
                     break;
 
+                case "action:options_set_caption":
+                    await _optionsService.StartChangeCaptionProcessAsync(query);
+                    break;
+
                 case "action:options_cancel":
-                    await _optionsService.InterruptChangeGroupIdAsync(query);
+                    await _optionsService.InterruptAllProcessesAsync(query);
                     break;
 
                 // Editing message block
@@ -114,8 +121,12 @@ namespace TgBot
                     await _postEditService.SendToGroup(query);
                     break;
 
+                case "action:editing_add_caption":
+                    await _postEditService.AddCaption(query);
+                    break;
+
                 case "action:editing_cancel":
-                    _postEditService.CancelEditing(query);
+                    await _postEditService.CancelEditing(query);
                     break;
             }
         }
@@ -127,13 +138,16 @@ namespace TgBot
             if (message.Chat?.Id is not { } chatId) return; // ChatId
 
             // Register a user if not
-            await _userService.RegisterUserAsync(chatId, null, false);
+            await _userService.RegisterUserAsync(chatId, null, null, false, false);
 
             // Checking, execute commands and return if message is a command
             if (await DispatchCommandAsync(message)) return;
 
             // Checking status for set group id
             if (await _groupIdService.HandleChangingGroupIdAsync(message, chatId)) return;
+
+            // Checking status for set caption
+            if (await _captionService.HandleChangingCaptionAsync(message, chatId)) return;
 
             // Otherwise handle message
             await defaultHandler(message);

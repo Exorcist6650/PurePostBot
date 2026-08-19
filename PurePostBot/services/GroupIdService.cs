@@ -5,18 +5,11 @@ using Utils;
 
 namespace Services
 {
-    public class GroupIdService
+    public class GroupIdService(ITelegramBotClient bot, UserService userService, OptionsService optionsService)
     {
-        private readonly ITelegramBotClient _bot;
-        private readonly UserService _userService;
-        private readonly OptionsService _optionsService;
-
-        public GroupIdService(ITelegramBotClient bot, UserService userService, OptionsService optionsService)
-        {
-            _bot = bot;
-            _userService = userService;
-            _optionsService = optionsService;
-        }
+        private readonly ITelegramBotClient _bot = bot;
+        private readonly UserService _userService = userService;
+        private readonly OptionsService _optionsService = optionsService;
 
         /// <summary>
         /// </summary>

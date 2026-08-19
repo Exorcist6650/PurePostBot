@@ -34,15 +34,18 @@ namespace Handlers
                 },
                 new[]
                 {
+                    // SET CAPTION button
+                    InlineKeyboardButton.WithCallbackData(
+                        RepliesReadService.GetButton("options_set_caption"), "action:options_set_caption")
+                },
+                new[]
+                {
                     // CANCEL button
                     InlineKeyboardButton.WithCallbackData(
                         RepliesReadService.GetButton("cancel"), "action:options_cancel")
                 }
             });
-            _userService = userService;
         }
-
-
 
         public async Task HandleAsync(Message message)
         {

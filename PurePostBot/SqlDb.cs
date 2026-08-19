@@ -17,19 +17,14 @@ namespace SqlDB
         }
 
         // Db initializer
-        public async Task<int> InitAsync()
+        public async Task<int> InitAsync(string query)
         {
             // Set and open db connection
             await using var connection = new SqliteConnection(_connectionString);
             await connection.OpenAsync();
 
             // Table create query
-            string query = @"
-                CREATE TABLE IF NOT EXISTS Users(
-                    Id BIGINT NOT NULL PRIMARY KEY, 
-                    GroupId BIGINT NULL,
-                    IsChangingGroupId BOOLEAN NOT NULL
-                );";
+            
 
             await using var command = new SqliteCommand(query, connection);
             return await command.ExecuteNonQueryAsync();

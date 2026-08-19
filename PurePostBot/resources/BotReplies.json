@@ -12,7 +12,17 @@
 
         "remove_group": "Group has been removed.",
 
-        "group_id_null": "You doesn't set a group | channel. Click /options and follow guide to set your group | channel.",
+        "group_id_null": "You don't set a group | channel. Click /options and follow guide to set your group | channel.",
+
+        "set_caption": "Send your custom text caption.",
+
+        "set_caption_success": "Success! Your custom caption is set",
+
+        "set_caption_failed": "Your caption is null.",
+
+        "caption_added": "Caption added",
+
+        "user_caption_null": "You don't set a caption. Click /options and follow guide to set your custom caption.",
 
         "ticket_unavailable": "This ticket is unavailable cause timeout. Send your post again.",
 

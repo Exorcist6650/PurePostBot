@@ -25,4 +25,6 @@
     </None>
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties resources_4botreplies_1json__JsonSchema="https://api.bluebricks.co/docs/schemas/latest/bricks.schema.json" /></VisualStudio></ProjectExtensions>
+
 </Project>

@@ -12,7 +12,7 @@ namespace DataManagement
 
         private static string Key(long chatId, long messageId) => $"{chatId}:{messageId}";
 
-        public string Append(Message message)
+        public string Set(Message message)
         {
             if (message?.Chat.Id is not { } chatId) return string.Empty;
             if (message?.Id is not { } messageId) return string.Empty;
@@ -23,7 +23,7 @@ namespace DataManagement
             return key;
         }
 
-        public string Append(ConcurrentQueue<Message> messages)
+        public string Set(ConcurrentQueue<Message> messages)
         {
             messages.TryPeek(out var first);
 

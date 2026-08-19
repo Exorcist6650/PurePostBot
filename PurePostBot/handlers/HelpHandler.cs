@@ -6,11 +6,9 @@ using Utils;
 
 namespace Handlers
 {
-    public class HelpHandler : IMessageHandler
+    public class HelpHandler(ITelegramBotClient bot) : IMessageHandler
     {
-        private readonly ITelegramBotClient _bot;
-
-        public HelpHandler(ITelegramBotClient bot) => _bot = bot;
+        private readonly ITelegramBotClient _bot = bot;
 
         public async Task HandleAsync(Message message)
         {

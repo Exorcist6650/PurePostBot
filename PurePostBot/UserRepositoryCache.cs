@@ -36,10 +36,21 @@ namespace DataManagement
         }
 
         // Update db and remove cache
-        public async Task UpdateAsync(long userId, long? GroupId, bool IsChangingGroupId)
+        public async Task UpdateAsync(
+            long userId,
+            long? groupId,
+            string? caption,
+            bool isChangingGroupId,
+            bool isChangingCaption)
         {
-            await _repo.UpdateAsync(userId, GroupId, IsChangingGroupId);
+            await _repo.UpdateAsync(userId, groupId, caption, isChangingGroupId, isChangingCaption);
             _cache.Remove(Key(userId));
+        }
+
+        public async Task UpdateAsync(User user)
+        {
+            await _repo.UpdateAsync(user);
+            _cache.Remove(Key(user.Id));
         }
 
         public void RemoveAsync(long id)

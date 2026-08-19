@@ -3,17 +3,11 @@ using SqlDB;
 
 namespace Services
 {
-    public class UserService
+    public class UserService(UserRepository repo, UserRepositoryCache cache)
     {
         // Fields
-        private readonly UserRepository _repo;
-        private readonly UserRepositoryCache _cache;
-
-        public UserService(UserRepository repo, UserRepositoryCache cache)
-        {
-            _repo = repo;
-            _cache = cache;
-        }
+        private readonly UserRepository _repo = repo;
+        private readonly UserRepositoryCache _cache = cache;
 
         /// <summary>
         /// Add a user to db. Uses only for new users.
@@ -24,12 +18,17 @@ namespace Services
         /// <returns>
         /// true if successful false otherwise
         /// </returns>
-        public async Task<bool> RegisterUserAsync(long userId, long? groupId, bool isChangingGroupId)
+        public async Task<bool> RegisterUserAsync(
+            long userId,
+            long? groupId,
+            string? caption,
+            bool isChangingGroupId,
+            bool isChangingCaption)
         {
             // If user is exist
             if (await _repo.GetByIdAsync(userId) is { }) return false;
             
-            return await _repo.CreateAsync(userId, groupId, isChangingGroupId) > 0 ? true : false;
+            return await _repo.CreateAsync(userId, groupId, caption, isChangingGroupId, isChangingCaption) > 0;
         }
 
         /// <summary>
@@ -39,8 +38,18 @@ namespace Services
         /// <returns></returns>
         public async Task<User> GetUserAsync(long userId) => await _cache.GetAsync(userId);
 
-        public async Task UpdateAsync(long userId, long? groupId, bool isChangingGroupId) =>
-            await _cache.UpdateAsync(userId, groupId, isChangingGroupId);
+        public async Task UpdateAsync(
+            long userId,
+            long? groupId,
+            string? caption,
+            bool isChangingGroupId,
+            bool isChangingCaption) =>
+
+            await _cache.UpdateAsync(userId, groupId, caption, isChangingGroupId, isChangingCaption);
+
+        public async Task UpdateAsync(User user) =>
+
+            await _cache.UpdateAsync(user);
 
         public async Task RemoveUserAsync(long userId)
         {

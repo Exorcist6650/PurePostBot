@@ -32,7 +32,7 @@ namespace MyApp
                 services.AddMemoryCache();
 
                 // TgHost
-                services.AddSingleton<TgHost>((sp) =>
+                services.AddSingleton((sp) =>
                     new TgHost(token));
 
                 // DB
@@ -43,95 +43,98 @@ namespace MyApp
                     }));
 
                 // User repository
-                services.AddSingleton<UserRepository>((sp) =>
-                    new UserRepository(sp.GetRequiredService<SqlDb>()));
+                services.AddSingleton<UserRepository>();
 
                 // User repository cache
-                services.AddSingleton<UserRepositoryCache>((sp) =>
+                services.AddSingleton((sp) =>
                     new UserRepositoryCache(
                         sp.GetRequiredService<UserRepository>(),
                         sp.GetRequiredService<IMemoryCache>(),
                         TimeSpan.FromMinutes(8)));
 
                 // Messages cache
-                services.AddSingleton<PostingMessagesCache>((sp) =>
+                services.AddSingleton((sp) =>
                     new PostingMessagesCache(
                         sp.GetRequiredService<IMemoryCache>(),
                         TimeSpan.FromMinutes(20)));
 
                 // User service
-                services.AddSingleton<UserService>((sp) =>
-                    new UserService(
-                        sp.GetRequiredService<UserRepository>(),
-                        sp.GetRequiredService<UserRepositoryCache>()));
+                services.AddSingleton<UserService>();
 
                 // Media group service
                 services.AddSingleton<MediaGroupService>();
 
                 // Options service
-                services.AddSingleton<OptionsService>((sp) =>
+                services.AddSingleton((sp) =>
                     new OptionsService(
                         sp.GetRequiredService<TgHost>().TelegramBot,
                         sp.GetRequiredService<UserService>()));
 
                 // Group id service
-                services.AddSingleton<GroupIdService>((sp) =>
+                services.AddSingleton((sp) =>
                     new GroupIdService(
                         sp.GetRequiredService<TgHost>().TelegramBot,
                         sp.GetRequiredService<UserService>(),
                         sp.GetRequiredService<OptionsService>()));
 
+                // Caption service
+                services.AddSingleton((sp) =>
+                    new CaptionService(
+                        sp.GetRequiredService<TgHost>().TelegramBot,
+                        sp.GetRequiredService<UserService>(),
+                        sp.GetRequiredService<OptionsService>()));
+
                 // Post edit service
-                services.AddSingleton<PostEditService>((sp) =>
+                services.AddSingleton((sp) =>
                     new PostEditService(
                         sp.GetRequiredService<TgHost>().TelegramBot,
                         sp.GetRequiredService<UserService>(),
                         sp.GetRequiredService<PostingMessagesCache>()));
 
                 // Start handler
-                services.AddSingleton<StartHandler>((sp) =>
+                services.AddSingleton((sp) =>
                     new StartHandler(
                         sp.GetRequiredService<TgHost>().TelegramBot,
                         sp.GetRequiredService<UserService>()));
 
                 // Help handler
-                services.AddSingleton<HelpHandler>((sp) =>
+                services.AddSingleton((sp) =>
                     new HelpHandler(
                         sp.GetRequiredService<TgHost>().TelegramBot));
 
                 // Options handler
-                services.AddSingleton<OptionsHandler>((sp) =>
+                services.AddSingleton((sp) =>
                     new OptionsHandler(
                         sp.GetRequiredService<TgHost>().TelegramBot,
                         sp.GetRequiredService<UserService>()));
 
                 // Message handler
-                services.AddSingleton<DefaultHandler>((sp) =>
+                services.AddSingleton((sp) =>
                     new DefaultHandler(
                         sp.GetRequiredService<TgHost>().TelegramBot,
                         sp.GetRequiredService<MediaGroupService>(),
                         sp.GetRequiredService<PostEditService>()));
 
                 // Bot
-                services.AddSingleton<Bot>((sp) =>
-                    new Bot(
-                        sp.GetRequiredService<TgHost>(),
-                        sp.GetRequiredService<UserService>(),
-                        sp.GetRequiredService<MediaGroupService>(),
-                        sp.GetRequiredService<OptionsService>(),
-                        sp.GetRequiredService<GroupIdService>(),
-                        sp.GetRequiredService<PostingMessagesCache>(),
-                        sp.GetRequiredService<PostEditService>(),
-                        sp.GetRequiredService<StartHandler>(),
-                        sp.GetRequiredService<HelpHandler>(),
-                        sp.GetRequiredService<OptionsHandler>(),
-                        sp.GetRequiredService<DefaultHandler>()));
+                services.AddSingleton<Bot>();
             }).Build();
 
             using(var scope = host.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<SqlDb>();
-                await db.InitAsync();
+
+                // Table query
+                string query = @"
+                CREATE TABLE IF NOT EXISTS Users(
+                    Id BIGINT NOT NULL PRIMARY KEY, 
+                    GroupId BIGINT NULL,
+                    Caption TEXT NULL,
+                    IsChangingGroupId BOOLEAN NOT NULL,
+                    IsChangingCaption BOOLEAN NOT NULL
+                    
+                );";
+
+                await db.InitAsync(query);
 
                 // Bot init
                 var bot = scope.ServiceProvider.GetRequiredService<Bot>();

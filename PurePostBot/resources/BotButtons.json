@@ -1,10 +1,20 @@
 {
     "en": {
+        "menu_create_post": "Create post",
+
+        "menu_create_button": "Create button",
+
+        "menu_settings":  "Settings",
+
         "options_change_group": "Change group | channel",
 
         "options_remove_group": "Remove group | channel",
 
-        "editing_create_post":  "Send",
+        "options_set_caption": "Change caption",
+
+        "editing_create_post": "Send",
+
+        "editing_caption": "Add caption",
 
         "cancel": "Cancel"
     }

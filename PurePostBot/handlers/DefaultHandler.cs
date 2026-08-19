@@ -5,20 +5,13 @@ using Utils;
 
 namespace Handlers
 {
-    public class DefaultHandler : IMessageHandler
+    public class DefaultHandler(ITelegramBotClient bot,
+        MediaGroupService mediaGroupService,
+        PostEditService postEditService) : IMessageHandler
     {
-        private readonly ITelegramBotClient _bot;
-        private readonly MediaGroupService _mediaGroupService;
-        private readonly PostEditService _postEditService;
-
-        public DefaultHandler(ITelegramBotClient bot, 
-            MediaGroupService mediaGroupService, 
-            PostEditService postEditService)
-        {
-            _bot = bot;
-            _mediaGroupService = mediaGroupService;
-            _postEditService = postEditService;
-        }
+        private readonly ITelegramBotClient _bot = bot;
+        private readonly MediaGroupService _mediaGroupService = mediaGroupService;
+        private readonly PostEditService _postEditService = postEditService;
 
         public async Task HandleAsync(Message message)
         {
