@@ -131,7 +131,6 @@ namespace MyApp
                     Caption TEXT NULL,
                     IsChangingGroupId BOOLEAN NOT NULL,
                     IsChangingCaption BOOLEAN NOT NULL
-                    
                 );";
 
                 await db.InitAsync(query);

@@ -5,7 +5,8 @@ using Utils;
 
 namespace Handlers
 {
-    public class DefaultHandler(ITelegramBotClient bot,
+    public class DefaultHandler(
+        ITelegramBotClient bot,
         MediaGroupService mediaGroupService,
         PostEditService postEditService) : IMessageHandler
     {
@@ -13,13 +14,8 @@ namespace Handlers
         private readonly MediaGroupService _mediaGroupService = mediaGroupService;
         private readonly PostEditService _postEditService = postEditService;
 
-        public async Task HandleAsync(Message message)
-        {
-            if (message?.Chat.Id is not { } chatId) return;
-
+        public async Task HandleAsync(Message message) =>
             await _postEditService.CreateEditMessage(message); // Create edit message
-
-        }
 
         public async Task HandleAlbumAsync(Message message)
         {

@@ -47,7 +47,7 @@ namespace DataManagement
                 new SqliteParameter("@GroupId", NullableToDb(user.GroupId)),
                 new SqliteParameter("@Caption", user.Caption),
                 new SqliteParameter("@IsChangingGroupId", user.IsChangingGroupId),
-                new SqliteParameter("@isChangingCaption", user.IsChangingCaption));
+                new SqliteParameter("@IsChangingCaption", user.IsChangingCaption));
 
         // Read
         public Task<User?> GetByIdAsync(long userId) =>

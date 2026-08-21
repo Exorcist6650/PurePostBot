@@ -1,10 +1,10 @@
 {
     "en": {
-        "menu_create_post": "Create post",
+        "menu_posting_mode": "Posting mode",
 
-        "menu_create_button": "Create button",
+        "menu_button_mode": "Button mode",
 
-        "menu_settings":  "Settings",
+        "menu_settings": "Settings",
 
         "options_change_group": "Change group | channel",
 

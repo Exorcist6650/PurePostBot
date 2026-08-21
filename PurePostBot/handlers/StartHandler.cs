@@ -25,12 +25,6 @@ namespace Handlers
                 {
                     new KeyboardButton[]
                     {
-                        RepliesReadService.GetButton("menu_create_post"),
-                        RepliesReadService.GetButton("menu_create_button")
-                    },
-
-                    new KeyboardButton[]
-                    {
                         RepliesReadService.GetButton("menu_settings")
                     }
                 })
@@ -49,7 +43,7 @@ namespace Handlers
             var text = RepliesReadService.GetReply("start_text");
 
             // Sending message with buttons menu
-            if (await PostingService.Send(_bot, chatId, new Message { Text = text}) is not { }) return;
+            if (await PostingService.SendTextWithMenu(_bot, chatId, text, _userButtonMenu) is not { }) return;
            
             // Adding user to db
             await _userService.RegisterUserAsync(chatId, null, null, false, false);

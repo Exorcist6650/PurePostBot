@@ -1,10 +1,11 @@
-﻿using Telegram.Bot;
-using Telegram.Bot.Types;
-using Utils;
-using Services;
-using Handlers;
+﻿using System;
 using System.Reflection.Emit;
 using DataManagement;
+using Handlers;
+using Services;
+using Telegram.Bot;
+using Telegram.Bot.Types;
+using Utils;
 
 namespace TgBot
 {
@@ -143,6 +144,9 @@ namespace TgBot
             // Checking, execute commands and return if message is a command
             if (await DispatchCommandAsync(message)) return;
 
+            // Checking, execute inputs if message is a keyboard input
+            if (await DispatchKeyboardInputAsync(message)) return;
+
             // Checking status for set group id
             if (await _groupIdService.HandleChangingGroupIdAsync(message, chatId)) return;
 
@@ -167,51 +171,23 @@ namespace TgBot
                 await _optionsHandler.HandleAsync(message);
 
             else
-                return false;
+                return false; // If not a command
 
             return true; // If command was execute
         }
 
-
-        public async Task<bool> TrySetGroupId(Message message, long userId)
+        public async Task<bool> DispatchKeyboardInputAsync(Message message)
         {
-            // Try get group
-            if (await GetGroupId(message) is { } groupId)
-            {
-                await _optionsService.ChangeUserGroupIdAsync(userId, groupId); // Change user data 
-                return true;
-            }
+            if (message.Text is not string text) return false;
 
-            return false; // Bot is not invited and message is not from group | channel
-        }
+            // Command option calling
+            if (text.StartsWith(RepliesReadService.GetButton("menu_settings")))
+                await _optionsHandler.HandleAsync(message);
 
-        public async Task<long?> GetGroupId(Message message)
-        {
-            if (message.ForwardFromChat != null)
-            {
-                // Checking group status
-                if (message.ForwardFromChat.Type == Telegram.Bot.Types.Enums.ChatType.Channel
-                    || message.ForwardFromChat.Type == Telegram.Bot.Types.Enums.ChatType.Group
-                    || message.ForwardFromChat.Type == Telegram.Bot.Types.Enums.ChatType.Supergroup)
-                {
-                    try
-                    {
-                        // Get member
-                        var member = await _host.TelegramBot.GetChatMember(message.ForwardFromChat, _host.Me.Id);
+            else 
+                return false; // If not an input
 
-                        if (member != null && member.IsAdmin)
-                        {
-                            return message.ForwardFromChat.Id; // Return group id
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        ConsoleLogger.Log(ex.Message, ELogStatus.Error); // Log
-                    }
-                }
-            }
-
-            return null;
+            return true; // If message is input 
         }
     }
 }
