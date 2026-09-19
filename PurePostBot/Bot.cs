@@ -1,13 +1,10 @@
-﻿using System;
-using System.Reflection.Emit;
-using DataManagement;
-using Handlers;
-using Services;
+﻿using PurePostBot.handlers;
+using PurePostBot.services;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Utils;
+using PurePostBot.utils;
 
-namespace TgBot
+namespace PurePostBot
 {
     class Bot(TgHost host,
         UserService userService,
@@ -15,7 +12,7 @@ namespace TgBot
         OptionsService optionsService,
         GroupIdService groupIdService,
         CaptionService captionService,
-        PostingMessagesCache postingMessagesCache,
+        PostingCacheService postingMessagesCache,
         PostEditService postEditService,
 
         StartHandler startHandler,
@@ -34,7 +31,7 @@ namespace TgBot
         private readonly OptionsService _optionsService = optionsService;
         private readonly GroupIdService _groupIdService = groupIdService;
         private readonly CaptionService _captionService = captionService;
-        private readonly PostingMessagesCache _postingMessagesCache = postingMessagesCache;
+        private readonly PostingCacheService _postingMessagesCache = postingMessagesCache;
         private readonly PostEditService _postEditService = postEditService;
 
         public async Task InitAsync()
@@ -139,7 +136,7 @@ namespace TgBot
             if (message.Chat?.Id is not { } chatId) return; // ChatId
 
             // Register a user if not
-            await _userService.RegisterUserAsync(chatId, null, null, false, false);
+            await _userService.RegisterUserAsync(chatId);
 
             // Checking, execute commands and return if message is a command
             if (await DispatchCommandAsync(message)) return;

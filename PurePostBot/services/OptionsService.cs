@@ -1,10 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using DataManagement;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace Services
+namespace PurePostBot.services
 {
     public class OptionsService(ITelegramBotClient bot, UserService userService)
     {
@@ -18,17 +15,12 @@ namespace Services
         {
             if (query?.Message?.Chat.Id is not { } userId) return;
 
-            // Read data
-            if (await _userService.GetUserAsync(userId) is not { } user) return;
-
-            var updateUser = user with 
-            { 
-                IsChangingGroupId = false,
-                IsChangingCaption = false,
-            };
-
-            // Set default status
-            await _userService.UpdateAsync(updateUser);
+            // Remove flags
+            await _userService.UpdateAsync(userId, user =>
+            {
+                user.IsChangingGroupId = false;
+                user.IsChangingCaption = false;
+            });
 
             // Delete options message
             await PostingService.Remove(_bot, userId, query.Message);
@@ -41,13 +33,11 @@ namespace Services
         {
             if (query?.Message?.Chat.Id is not { } userId) return;
 
-            // Read data
-            if (await _userService.GetUserAsync(userId) is not { } user) return;
-
-            var updateUser = user with { IsChangingGroupId = true };
-
             // Set status
-            await _userService.UpdateAsync(updateUser);
+            await _userService.UpdateAsync(userId, user =>
+            {
+                user.IsChangingGroupId = true;
+            });
 
             // Send message
             await PostingService.Send(_bot, userId, new Message
@@ -58,57 +48,42 @@ namespace Services
         {
             if (query?.Message?.Chat.Id is not { } userId) return;
 
-            // Read data
-            if (await _userService.GetUserAsync(userId) is not { } user) return;
-
-            var updateUser = user with
+            // Update data and reset flags
+            await _userService.UpdateAsync(userId, user =>
             {
-                GroupId = null,
-                IsChangingGroupId = false,
-                IsChangingCaption = false
-            };
-
-            // Clear group id
-            await _userService.UpdateAsync(updateUser);
+                user.GroupId = null;
+                user.IsChangingGroupId = false;
+                user.IsChangingCaption = false;
+            });
 
             // Send message
             await PostingService.Send(_bot, userId, new Message
             { Text = RepliesReadService.GetReply("remove_group") });
         }
 
-
-        public async Task ChangeUserGroupIdAsync(long userId, long? groupId)
+        public async Task ChangeUserGroupIdAsync(long userId, long groupId)
         {
-            // Read data
-            if (await _userService.GetUserAsync(userId) is not { } user) return;
-
-            var updateUser = user with 
-            { 
-                GroupId = groupId,
-                IsChangingGroupId = false 
-            };
-
-            // Update data
-            await _userService.UpdateAsync(updateUser);
+            // Update data and reset flags
+            await _userService.UpdateAsync(userId, user =>
+            {
+                user.GroupId = groupId;
+                user.IsChangingGroupId = false;
+                user.IsChangingCaption = false;
+            });
         }
 
-        
+
         // CAPTION METHODS
 
         public async Task StartChangeCaptionProcessAsync(CallbackQuery query)
         {
             if (query?.Message?.Chat.Id is not { } userId) return;
 
-            // Read data
-            if (await _userService.GetUserAsync(userId) is not { } user) return;
-
-            var updateUser = user with
-            {
-                IsChangingCaption = true
-            };
-
             // Update status
-            await _userService.UpdateAsync(updateUser);
+            await _userService.UpdateAsync(userId, user =>
+            {
+                user.IsChangingCaption = true;
+            });
 
             // Send message
             await PostingService.Send(_bot, userId, new Message
@@ -117,17 +92,13 @@ namespace Services
 
         public async Task ChangeCaptionAsync(long userId, string caption)
         {
-            // Read data
-            if (await _userService.GetUserAsync(userId) is not { } user) return;
-
-            var updateUser = user with
+            // Update data and reset flags
+            await _userService.UpdateAsync(userId, user =>
             {
-                Caption = caption,
-                IsChangingCaption = false
-            };
-
-            // Update data
-            await _userService.UpdateAsync(updateUser);
+                user.Caption = caption;
+                user.IsChangingGroupId = false;
+                user.IsChangingCaption = false;
+            });
         }
     }
 }

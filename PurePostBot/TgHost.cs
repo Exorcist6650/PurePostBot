@@ -1,39 +1,32 @@
-﻿using Telegram.Bot;
+﻿using PurePostBot.utils;
+using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Utils;
 
-namespace TgBot
+namespace PurePostBot
 {
-    class TgHost
+    class TgHost(ITelegramBotClient telegramBotClient)
     {
         // Events
         public Action<ITelegramBotClient, Update>? OnMessage;
         public Action<ITelegramBotClient, CallbackQuery>? OnCallback;
 
         // Fields
-        public User Me { get; private set; } // Bot info
+        public User Me { get; private set; } = null!; // Bot info
 
-        public TelegramBotClient TelegramBot { get; } // Instance
-
-
-        // Constructor
-        public TgHost(string token)
-        {
-            TelegramBot = new TelegramBotClient(token);
-        }
+        public readonly ITelegramBotClient TelegramBot = telegramBotClient;
 
         public async Task Start()
         {
             Me = await TelegramBot.GetMe(); // Get bot info
-            TelegramBot.StartReceiving(updateHandler, ErrorHandler); // Start
+            TelegramBot.StartReceiving(UpdateHandler, ErrorHandler); // Start
 
             ConsoleLogger.Log("Start receiving"); // Log
         }
 
         // Handlers
-        private async Task updateHandler(ITelegramBotClient client, Update update, CancellationToken token)
+        private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
         {
             // Button callback
             if (update.Type == UpdateType.CallbackQuery)

@@ -1,9 +1,10 @@
-﻿using Services;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
-using Utils;
+using PurePostBot.services;
+using PurePostBot.utils;
 
-namespace Handlers
+namespace PurePostBot.handlers
+
 {
     public class DefaultHandler(
         ITelegramBotClient bot,
@@ -19,7 +20,7 @@ namespace Handlers
 
         public async Task HandleAlbumAsync(Message message)
         {
-            if (message?.Chat.Id is not { } chatId) return;
+            if (message?.Chat.Id is not { }) return;
             if (message.MediaGroupId is not { } mediaGroupId) return;
 
             // Get all messages

@@ -1,10 +1,9 @@
-﻿using Services;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
-using TgBot;
-using Utils;
+using PurePostBot.services;
+using PurePostBot.utils;
 
-namespace Handlers
+namespace PurePostBot.handlers
 {
     public class HelpHandler(ITelegramBotClient bot) : IMessageHandler
     {

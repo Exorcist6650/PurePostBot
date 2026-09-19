@@ -1,60 +1,106 @@
-﻿using DataManagement;
-using SqlDB;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using PurePostBot.models;
 
-namespace Services
+namespace PurePostBot.services
 {
-    public class UserService(UserRepository repo, UserRepositoryCache cache)
+    public class UserService(
+        AppDbContext db,
+        IMemoryCache cache,
+        TimeSpan ttl)
     {
         // Fields
-        private readonly UserRepository _repo = repo;
-        private readonly UserRepositoryCache _cache = cache;
+        private readonly AppDbContext _db = db;
+        private readonly IMemoryCache _cache = cache;
+        private readonly TimeSpan _ttl = ttl;
 
-        /// <summary>
-        /// Add a user to db. Uses only for new users.
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <param name="groupId"></param>
-        /// <param name="isChangingGroupId"></param>
-        /// <returns>
-        /// true if successful false otherwise
-        /// </returns>
-        public async Task<bool> RegisterUserAsync(
-            long userId,
-            long? groupId,
-            string? caption,
-            bool isChangingGroupId,
-            bool isChangingCaption)
+
+        // Key generator to cache
+        private static string Key(long userId) => $"user:{userId}";
+
+
+        // CRUD operations
+
+        public async Task<UserClient> RegisterUserAsync(long userId)
         {
-            // If user is exist
-            if (await _repo.GetByIdAsync(userId) is { }) return false;
-            
-            return await _repo.CreateAsync(userId, groupId, caption, isChangingGroupId, isChangingCaption) > 0;
+            var existingUser = await _db.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == userId);
+
+            // If user is exist return existing
+            if (existingUser is not null) return existingUser;
+
+            // Create user
+            var user = new UserClient()
+            {
+                Id = userId,
+                GroupId = null,
+                Caption = null,
+                IsChangingGroupId = false,
+                IsChangingCaption = false
+            };
+
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+
+            _db.Entry(user).State = EntityState.Detached;
+
+            // Return registered user
+            return user;
         }
 
-        /// <summary>
-        /// Get user from cache. Otherwise append user to db and return
-        /// </summary>
-        /// <param name="userId"></param>
-        /// <returns></returns>
-        public async Task<User> GetUserAsync(long userId) => await _cache.GetAsync(userId);
+        public async Task<UserClient> GetUserAsync(long userId)
+        {
+            var user = await _cache.GetOrCreateAsync(
+                Key(userId),
+                async entry =>
+                {
+                    entry.AbsoluteExpirationRelativeToNow = _ttl;
+
+                    var user = await _db.Users
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.Id == userId);
+
+                    return user ?? await RegisterUserAsync(userId);
+                }
+            );
+
+            return user ?? throw new InvalidOperationException(
+                    $"Can't load the user: {userId}");
+        }
 
         public async Task UpdateAsync(
             long userId,
-            long? groupId,
-            string? caption,
-            bool isChangingGroupId,
-            bool isChangingCaption) =>
-
-            await _cache.UpdateAsync(userId, groupId, caption, isChangingGroupId, isChangingCaption);
-
-        public async Task UpdateAsync(User user) =>
-
-            await _cache.UpdateAsync(user);
-
-        public async Task RemoveUserAsync(long userId)
+            Action<UserClient> update)
         {
-            await _repo.DeleteAsync(userId);
-            _cache.RemoveAsync(userId);
+            var user = await _db.Users
+                .FirstOrDefaultAsync(x => x.Id == userId);
+
+            if (user is null) return; // If user is not exist
+
+            update(user);
+
+            _db.Users.Update(user);
+            await _db.SaveChangesAsync();
+
+            _cache.Remove(Key(userId)); // Clear cache
+        }
+
+        public async Task<bool> RemoveUserAsync(long userId)
+        {
+            var user = await _db.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == userId);
+
+            if (user is null) return false; // If user is not exist
+
+            // Clear
+            _db.Users.Remove(user);
+            _cache.Remove(Key(userId));
+
+            await _db.SaveChangesAsync();
+
+            return true;
         }
 
     }

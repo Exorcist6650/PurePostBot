@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Services
+namespace PurePostBot.services
 {
     public enum ELangs : byte
     {

@@ -1,9 +1,8 @@
-﻿using System.Data.SqlTypes;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
-using Utils;
+using PurePostBot.utils;
 
-namespace Services
+namespace PurePostBot.services
 {
     public class GroupIdService(ITelegramBotClient bot, UserService userService, OptionsService optionsService)
     {
@@ -18,7 +17,9 @@ namespace Services
         /// <returns>True if user is changing group id, false otherwise</returns>
         public async Task<bool> HandleChangingGroupIdAsync(Message message, long userId)
         {
-            if ((await _userService.GetUserAsync(userId)).IsChangingGroupId)
+            if (await _userService.GetUserAsync(userId) is not { } user) return false;
+
+            if (user.IsChangingGroupId)
             {
                 // Try get group
                 if (await TrySetGroupId(message, userId))

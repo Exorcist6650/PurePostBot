@@ -1,11 +1,10 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.Sockets;
 using Microsoft.Extensions.Caching.Memory;
 using Telegram.Bot.Types;
 
-namespace DataManagement
+namespace PurePostBot.services
 {
-    public class PostingMessagesCache(IMemoryCache cache, TimeSpan ttl)
+    public class PostingCacheService(IMemoryCache cache, TimeSpan ttl)
     {
         private readonly IMemoryCache _cache = cache;
         private readonly TimeSpan _ttl = ttl;

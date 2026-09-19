@@ -1,51 +1,40 @@
 ﻿using System.Collections.Concurrent;
-using DataManagement;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace Services
+namespace PurePostBot.services
 {
-    public class PostEditService
+    public class PostEditService(ITelegramBotClient bot, UserService userService, PostingCacheService messagesCache)
     {
-        private readonly ITelegramBotClient _bot;
-        private readonly UserService _userService;
-        private readonly PostingMessagesCache _messagesCache;
-        private readonly InlineKeyboardMarkup _inlineKeyboard;
-
-        public PostEditService(ITelegramBotClient bot, UserService userService, PostingMessagesCache messagesCache)
-        {
-            _bot = bot;
-            _userService = userService;
-            _messagesCache = messagesCache;
-
-            // Buttons
-            _inlineKeyboard = new InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
+        private readonly ITelegramBotClient _bot = bot;
+        private readonly UserService _userService = userService;
+        private readonly PostingCacheService _messagesCache = messagesCache;
+        private readonly InlineKeyboardMarkup _inlineKeyboard = new(
+            [
+                [
                     // CREATE POST button 
                     InlineKeyboardButton.WithCallbackData(
                         RepliesReadService.GetButton("editing_create_post"), "action:editing_send_post")
-                },
-                new[]
-                {
+                ],
+                [
                     // CAPTION button
                     InlineKeyboardButton.WithCallbackData(
                         RepliesReadService.GetButton("editing_caption"), "action:editing_add_caption")
-                },
-                new[]
-                {
+                ],
+                [
                     // CANCEL button
                     InlineKeyboardButton.WithCallbackData(
                         RepliesReadService.GetButton("cancel"), "action:editing_cancel")
-                }
-            });
-        }
+                ]
+            ]);
 
-        public string CreateTicket(string key) => $"TICKET:{key}";
 
-        public string GetKey(string ticket) => ticket.Substring("TICKET:".Length);
+        // Method to construct and unconstruct tickets
+        private static string CreateTicket(string key) => $"TICKET#{key}";
+
+        private static string GetKey(string ticket) => ticket["TICKET#".Length..];
+
 
         public async Task CreateEditMessage(Message message)
         {

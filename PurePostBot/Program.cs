@@ -1,144 +1,116 @@
-﻿using Services;
-using SqlDB;
-using DataManagement;
-using TgBot;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.IdentityModel.Tokens.Experimental;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Utils;
-using Handlers;
+using PurePostBot.utils;
+using PurePostBot.handlers;
+using Microsoft.Extensions.Options;
+using PurePostBot.services;
+using Telegram.Bot;
+using Microsoft.Extensions.Configuration;
 
-namespace MyApp
+namespace PurePostBot
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static async Task Main()
         {
-            var token = Environment.GetEnvironmentVariable("BOT_TOKEN", EnvironmentVariableTarget.User);
-
-            if (token is null)
-            {
-                ConsoleLogger.Log("Token is null"); // Log
-                return;
-            }
-
             // SQLite init
             SQLitePCL.Batteries.Init();
 
             // DI container
-            var host = Host.CreateDefaultBuilder(args).ConfigureServices((context, services) =>
-            {
-                services.AddMemoryCache();
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    config.AddEnvironmentVariables();
+                })
+                .ConfigureServices((context, services) =>
+                {
+                    // Read token from env
+                    string token = Environment.GetEnvironmentVariable(
+                        "Bot__Token", EnvironmentVariableTarget.User) 
+                    ?? throw new ArgumentNullException("Env:Bot__Token is null");
 
-                // TgHost
-                services.AddSingleton((sp) =>
-                    new TgHost(token));
+                    // Bot options
+                    services
+                        .AddOptions<BotOptions>()
+                        .Configure(options =>
+                        {
+                            options.Token = token;
+                        })
+                        .Validate(
+                            options =>
+                            !string.IsNullOrEmpty(options.Token),
+                            "Bot:Token is required")
+                        .ValidateOnStart();
 
-                // DB
-                services.AddSingleton<SqlDb>((sp) =>
-                    new SqlDb(new DbOptions
+                    // Telegram bot client
+                    services.AddSingleton<ITelegramBotClient>(sp =>
                     {
-                        ConnectionString = $"Data Source = botdata.db"
-                    }));
+                        var options = sp
+                            .GetRequiredService<IOptions<BotOptions>>()
+                            .Value;
 
-                // User repository
-                services.AddSingleton<UserRepository>();
+                        return new TelegramBotClient(options.Token);
+                    });
 
-                // User repository cache
-                services.AddSingleton((sp) =>
-                    new UserRepositoryCache(
-                        sp.GetRequiredService<UserRepository>(),
-                        sp.GetRequiredService<IMemoryCache>(),
-                        TimeSpan.FromMinutes(8)));
+                    // TgHost
+                    services.AddSingleton<TgHost>();
 
-                // Messages cache
-                services.AddSingleton((sp) =>
-                    new PostingMessagesCache(
-                        sp.GetRequiredService<IMemoryCache>(),
-                        TimeSpan.FromMinutes(20)));
+                    // Db context 
+                    services.AddSingleton<AppDbContext>();
 
-                // User service
-                services.AddSingleton<UserService>();
+                    // Cache
+                    services.AddMemoryCache();
 
-                // Media group service
-                services.AddSingleton<MediaGroupService>();
+                    // Messages cache
+                    services.AddSingleton(sp =>
+                        new PostingCacheService(
+                            sp.GetRequiredService<IMemoryCache>(),
+                            TimeSpan.FromMinutes(20)));
 
-                // Options service
-                services.AddSingleton((sp) =>
-                    new OptionsService(
-                        sp.GetRequiredService<TgHost>().TelegramBot,
-                        sp.GetRequiredService<UserService>()));
+                    // User service
+                    services.AddSingleton(sp =>
+                        new UserService(
+                            sp.GetRequiredService<AppDbContext>(),
+                            sp.GetRequiredService<IMemoryCache>(),
+                            TimeSpan.FromMinutes(8)));
 
-                // Group id service
-                services.AddSingleton((sp) =>
-                    new GroupIdService(
-                        sp.GetRequiredService<TgHost>().TelegramBot,
-                        sp.GetRequiredService<UserService>(),
-                        sp.GetRequiredService<OptionsService>()));
+                    // Media group service
+                    services.AddSingleton<MediaGroupService>();
 
-                // Caption service
-                services.AddSingleton((sp) =>
-                    new CaptionService(
-                        sp.GetRequiredService<TgHost>().TelegramBot,
-                        sp.GetRequiredService<UserService>(),
-                        sp.GetRequiredService<OptionsService>()));
+                    // Options service
+                    services.AddSingleton<OptionsService>();
 
-                // Post edit service
-                services.AddSingleton((sp) =>
-                    new PostEditService(
-                        sp.GetRequiredService<TgHost>().TelegramBot,
-                        sp.GetRequiredService<UserService>(),
-                        sp.GetRequiredService<PostingMessagesCache>()));
+                    // Group id service
+                    services.AddSingleton<GroupIdService>();
 
-                // Start handler
-                services.AddSingleton((sp) =>
-                    new StartHandler(
-                        sp.GetRequiredService<TgHost>().TelegramBot,
-                        sp.GetRequiredService<UserService>()));
+                    // Caption service
+                    services.AddSingleton<CaptionService>();
 
-                // Help handler
-                services.AddSingleton((sp) =>
-                    new HelpHandler(
-                        sp.GetRequiredService<TgHost>().TelegramBot));
+                    // Post edit service
+                    services.AddSingleton<PostEditService>();
 
-                // Options handler
-                services.AddSingleton((sp) =>
-                    new OptionsHandler(
-                        sp.GetRequiredService<TgHost>().TelegramBot,
-                        sp.GetRequiredService<UserService>()));
+                    // Start handler
+                    services.AddSingleton<StartHandler>();
 
-                // Message handler
-                services.AddSingleton((sp) =>
-                    new DefaultHandler(
-                        sp.GetRequiredService<TgHost>().TelegramBot,
-                        sp.GetRequiredService<MediaGroupService>(),
-                        sp.GetRequiredService<PostEditService>()));
+                    // Help handler
+                    services.AddSingleton<HelpHandler>();
 
-                // Bot
-                services.AddSingleton<Bot>();
-            }).Build();
+                    // Options handler
+                    services.AddSingleton<OptionsHandler>();
 
-            using(var scope = host.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<SqlDb>();
+                    // Message handler
+                    services.AddSingleton<DefaultHandler>();
 
-                // Table query
-                string query = @"
-                CREATE TABLE IF NOT EXISTS Users(
-                    Id BIGINT NOT NULL PRIMARY KEY, 
-                    GroupId BIGINT NULL,
-                    Caption TEXT NULL,
-                    IsChangingGroupId BOOLEAN NOT NULL,
-                    IsChangingCaption BOOLEAN NOT NULL
-                );";
+                    // Bot
+                    services.AddSingleton<Bot>();
+                }).Build();
 
-                await db.InitAsync(query);
+            var telegramClient = host.Services.GetRequiredService<ITelegramBotClient>();
 
-                // Bot init
-                var bot = scope.ServiceProvider.GetRequiredService<Bot>();
-                await bot.InitAsync();
-            }
+            // Bot init
+            var bot = host.Services.GetRequiredService<Bot>();
+            await bot.InitAsync();
 
             Console.Read();
         }

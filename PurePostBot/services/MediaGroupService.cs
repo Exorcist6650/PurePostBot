@@ -1,11 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using Telegram.Bot.Types;
 
-namespace Services
+namespace PurePostBot.services
 {
     public class MediaGroupService
     {
-        private ConcurrentDictionary<string, ConcurrentQueue<Message>> _mediaGroupBuffer = new();
+        private readonly ConcurrentDictionary<string, ConcurrentQueue<Message>> _mediaGroupBuffer = new();
 
         public void AppendToBuffer(string groupId, Message message)
         {
@@ -18,7 +18,7 @@ namespace Services
             // Getting all messages
             _mediaGroupBuffer.TryGetValue(mediaGroupId, out var messages);
 
-            return (messages != null && messages.Count > 0) ? messages : null;
+            return (messages != null && !messages.IsEmpty) ? messages : null;
         }
 
         public bool TryRemoveFromBuffer(string mediaGroupId) =>
@@ -29,7 +29,7 @@ namespace Services
             // Getting all messages and immediately removing the key
             if (_mediaGroupBuffer.TryRemove(mediaGroupId, out var messages))
             {
-                if (messages != null && messages.Count > 0)
+                if (messages != null && !messages.IsEmpty)
                 {
                     return ConvertToMediaGroup(messages);
                 }

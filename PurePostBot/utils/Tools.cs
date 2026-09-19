@@ -1,4 +1,4 @@
-﻿namespace Utils
+﻿namespace PurePostBot.utils
 {
     public enum ELogStatus : byte
     {

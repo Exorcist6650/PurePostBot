@@ -1,9 +1,9 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using Utils;
+using PurePostBot.utils;
 
-namespace Services
+namespace PurePostBot.services
 {
     public enum EMessageType : byte
     {
@@ -95,43 +95,33 @@ namespace Services
         {
             if (type is null) return null;
 
-            switch (type)
+            return type switch
             {
-                case EMessageType.Animation:
-                    return await client.SendAnimation(chatId, message.Animation!, 
-                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
+                EMessageType.Animation => await client.SendAnimation(chatId, message.Animation!,
+                                        caption: message.Caption, replyMarkup: message.ReplyMarkup),
 
-                case EMessageType.Audio:
-                    return await client.SendAudio(chatId, message.Audio!, 
-                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
+                EMessageType.Audio => await client.SendAudio(chatId, message.Audio!,
+                                        caption: message.Caption, replyMarkup: message.ReplyMarkup),
 
-                case EMessageType.Document:
-                    return await client.SendDocument(chatId, message.Document!, 
-                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
+                EMessageType.Document => await client.SendDocument(chatId, message.Document!,
+                                        caption: message.Caption, replyMarkup: message.ReplyMarkup),
 
-                case EMessageType.Message:
-                    return await client.SendMessage(chatId, message.Text!, 
-                        replyMarkup: message.ReplyMarkup);
+                EMessageType.Message => await client.SendMessage(chatId, message.Text!,
+                                        replyMarkup: message.ReplyMarkup),
 
-                case EMessageType.Photo:
-                    return await client.SendPhoto(chatId, message.Photo![^1], 
-                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
+                EMessageType.Photo => await client.SendPhoto(chatId, message.Photo![^1],
+                                        caption: message.Caption, replyMarkup: message.ReplyMarkup),
 
-                case EMessageType.Sticker:
-                    return await client.SendSticker(chatId, message.Sticker!, 
-                        replyMarkup: message.ReplyMarkup);
+                EMessageType.Sticker => await client.SendSticker(chatId, message.Sticker!,
+                                        replyMarkup: message.ReplyMarkup),
 
-                case EMessageType.Video:
-                    return await client.SendVideo(chatId, message.Video!, 
-                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
+                EMessageType.Video => await client.SendVideo(chatId, message.Video!,
+                                        caption: message.Caption, replyMarkup: message.ReplyMarkup),
 
-                case EMessageType.Voice:
-                    return await client.SendVoice(chatId, message.Voice!, 
-                        caption: message.Caption, replyMarkup: message.ReplyMarkup);
-
-                default:
-                    return null;
-            }
+                EMessageType.Voice => await client.SendVoice(chatId, message.Voice!,
+                                        caption: message.Caption, replyMarkup: message.ReplyMarkup),
+                _ => null,
+            };
         }
 
         // Send media group

@@ -1,9 +1,7 @@
-﻿
-
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace Services
+namespace PurePostBot.services
 {
     public class CaptionService(ITelegramBotClient bot, UserService userService, OptionsService optionsService)
     {
@@ -13,7 +11,9 @@ namespace Services
 
         public async Task<bool> HandleChangingCaptionAsync(Message message, long userId)
         {
-            if ((await _userService.GetUserAsync(userId)).IsChangingCaption)
+            if (await _userService.GetUserAsync(userId) is not { } user) return false;
+
+            if (user.IsChangingCaption)    
             {
                 if (await TrySetCaptionAsync(message, userId))
                 {
@@ -40,7 +40,7 @@ namespace Services
             {
                 // Crop
                 int limit = 1024;
-                var caption = text.Length > limit ? text.Substring(0, limit) : text;
+                var caption = text.Length > limit ? text[..limit] : text;
 
                 await _optionsService.ChangeCaptionAsync(userId, caption); // Change user caption
 
