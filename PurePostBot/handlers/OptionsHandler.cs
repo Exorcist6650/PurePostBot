@@ -37,9 +37,11 @@ namespace PurePostBot.handlers
         public async Task HandleAsync(Message message)
         {
             if (message?.Chat.Id is not { } chatId) return;
-
+            
             var user = await _userService.GetUserAsync(chatId);
-            string text = $"{message.Chat.FirstName} {message.Chat.LastName} \nGroupId: {user?.GroupId}";
+            string text = $"{message.Chat.FirstName} {message.Chat.LastName} \n" +
+                          $"GroupId: {Convert.ToString(user?.GroupId) ?? "None"}\n" +
+                          $"Caption: {Convert.ToString(user?.Caption) ?? "None"}\n";
 
             await PostingService.Send(_bot, chatId, new Message() { Text = text, ReplyMarkup = _inlineKeyboard });
         }

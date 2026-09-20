@@ -135,9 +135,6 @@ namespace PurePostBot
         {
             if (message.Chat?.Id is not { } chatId) return; // ChatId
 
-            // Register a user if not
-            await _userService.RegisterUserAsync(chatId);
-
             // Checking, execute commands and return if message is a command
             if (await DispatchCommandAsync(message)) return;
 
