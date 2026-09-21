@@ -106,8 +106,6 @@ namespace PurePostBot
                     services.AddSingleton<Bot>();
                 }).Build();
 
-            var telegramClient = host.Services.GetRequiredService<ITelegramBotClient>();
-
             // Bot init
             var bot = host.Services.GetRequiredService<Bot>();
             await bot.InitAsync();

@@ -1,2 +1,2 @@
 # PurePostBot
-Add bot token as environment variable "BOT_TOKEN" by [System.Environment]::SetEnvironmentVariable("BOT_TOKEN","Token","User")
+Add bot token as environment variable "Bot__Token" in user space
